@@ -54,11 +54,11 @@ private:
 	int numF, birthYear, group;
 public:
 	virtual bool departmentAccess() { return false; }
-	void setNumF(int n) { numF = n; }
-	int getNumF() { return numF; }
-	void setBirthYear(int n) { birthYear = n; }
-	int getBirthYear() { return birthYear; }
-	void setGroup(int n) { group = n; }
+	virtual void setNumF(int n) { numF = n; }
+	virtual int getNumF() { return numF; }
+	virtual void setBirthYear(int n) { birthYear = n; }
+	virtual int getBirthYear() { return birthYear; }
+	virtual void setGroup(int n) { group = n; }
 	int getGroup() { return group; };
 	Student(string n, int fn, int by, int gr) :
 		Account(n),
@@ -74,6 +74,13 @@ public:
 	virtual bool departmentAccess() { return true; }
 };
 
+class TeacherStudent : public Student {
+public:
+	TeacherStudent(string uname, int fn, int by, int gr) :
+		Student(uname, fn, by, gr) { }
+	virtual bool departmentAccess() { return true; }
+};
+
 int main()
 {
 	Accounts acc;
@@ -81,11 +88,12 @@ int main()
 	{
 		cout << "1 - Register student" << endl;
 		cout << "2 - Register teacher" << endl;
-		cout << "3 - Check username" << endl;
-		cout << "4 - Exit" << endl;
+		cout << "3 - Register teacher/student" << endl;
+		cout << "4 - Check username" << endl;
+		cout << "5 - Exit" << endl;
 		cout << "Enter: ";
 		int choice; cin >> choice;
-		if (choice < 1 || choice > 4) {
+		if (choice < 1 || choice > 5) {
 			cout << "Invalid input";
 			cout << "\n\n";
 			continue;
@@ -112,7 +120,7 @@ int main()
 			cin >> newBirthYear;
 			cout << "Enter group: ";
 			cin >> newGroup;
-			Student s(newUser,newFN,newBirthYear,newGroup);
+			Student s(newUser, newFN, newBirthYear, newGroup);
 			acc.addUser(s.getUsername());
 			acc.addFN(s.getNumF());
 			cout << "\n\n";
@@ -128,14 +136,42 @@ int main()
 		}
 		else if (choice == 3)
 		{
+			string newUser;
+			int newFN, newBirthYear, newGroup;
+			cout << "Register username: ";
+			cin >> newUser;
+			if (acc.userExists(newUser)) {
+				cout << "Username taken!" << endl;
+				cout << "\n\n";
+				continue;
+			}
+			cout << "Enter faculty number: ";
+			cin >> newFN;
+			if (acc.FNexists(newFN)) {
+				cout << "This faculty number has a registered account!" << endl;
+				cout << "\n\n";
+				continue;
+			}
+			cout << "Enter birth year: ";
+			cin >> newBirthYear;
+			cout << "Enter group: ";
+			cin >> newGroup;
+			TeacherStudent s(newUser, newFN, newBirthYear, newGroup);
+			acc.addUser(s.getUsername());
+			acc.addFN(s.getNumF());
+			cout << "\n\n";
+		}
+		else if (choice == 4)
+		{
 			string enterUsername;
 			cin >> enterUsername;
 			if (acc.userExists(enterUsername)) {
 				cout << "The user has access to the portal." << endl;
 				cout << "\n\n";
 			}
-			else { cout << "The user does NOT have access to the portal" << endl; 
-			cout << "\n\n"; 
+			else {
+				cout << "The user does NOT have access to the portal" << endl;
+				cout << "\n\n";
 			}
 		}
 		else { return 0; }
