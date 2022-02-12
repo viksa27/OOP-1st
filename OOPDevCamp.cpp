@@ -5,7 +5,7 @@ using namespace std;
 
 class Shape {
 public:
-	virtual double getSurface() { return 0; };
+	virtual double getSurface() { return 0; }
 	virtual double getPerimeter() { return 0; }
 };
 
