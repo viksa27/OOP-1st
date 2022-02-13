@@ -2,97 +2,123 @@
 #include <set>
 using namespace std;
 
-class Account {
+class User {
 public:
-	Account(const string uname) :
+	User(const string uname) :
 		username(uname)
 	{};
+	string getUsername() const { return username; }
+	virtual bool department() { return false; }
 
-	string getUsername() { return username; }
-
-	virtual bool departmentAccess() { return false; }
-
-private:
+protected:
 	string username;
+	int facultyNumber = 0, birthYear = 0, group = 0;
 };
 
-class Accounts {
+class allUsers {
 public:
-	bool userExists(const string username);
-	bool FNexists(int num);
-	void addUser(const string username);
-	void addFN(int num);
+	bool userExists(const User& u);
+	void addUser(const User& u);
 private:
-	set<string> registeredAccounts;
-	set<int> registeredFN;
+	set<string> registeredUsers;
 };
 
-void Accounts::addUser(const string username) {
-	registeredAccounts.insert(username);
+void allUsers::addUser(const User& u) {
+	registeredUsers.insert(u.getUsername());
 }
 
-void Accounts::addFN(int num) {
-	registeredFN.insert(num);
-}
-
-bool Accounts::userExists(const string username) {
-	auto it = registeredAccounts.find(username);
-	if (it == registeredAccounts.end()) return false;
+bool allUsers::userExists(const User& u) {
+	auto it = registeredUsers.find(u.getUsername());
+	if (it == registeredUsers.end()) return false;
 
 	return true;
 }
 
-bool Accounts::FNexists(int num) {
-	auto it = registeredFN.find(num);
-	if (it == registeredFN.end()) return false;
-
-	return true;
-}
-
-class Student : public Account {
-private:
-	int numF, birthYear, group;
+class Student : public User {
 public:
-	virtual bool departmentAccess() { return false; }
-	virtual void setNumF(int n) { numF = n; }
-	virtual int getNumF() { return numF; }
-	virtual void setBirthYear(int n) { birthYear = n; }
-	virtual int getBirthYear() { return birthYear; }
-	virtual void setGroup(int n) { group = n; }
 	int getGroup() { return group; };
-	Student(string n, int fn, int by, int gr) :
-		Account(n),
-		numF(fn),
-		birthYear(by),
-		group(gr) { }
+	Student(string uname, int facNum, int bYear, int gr) :
+		User(uname) {
+		facultyNumber = facNum;
+		birthYear = bYear;
+		group = gr;
+	}
 };
 
-class Teacher : public Account {
+class Teacher : public User {
 public:
 	Teacher(string uname) :
-		Account(uname) { };
+		User(uname) { }
 	virtual bool departmentAccess() { return true; }
 };
 
-class TeacherStudent : public Student {
+class TeacherStudent : public User {
 public:
-	TeacherStudent(string uname, int fn, int by, int gr) :
-		Student(uname, fn, by, gr) { }
+	TeacherStudent(string uname, int facNum, int bYear, int gr) :
+		User(uname) {
+		facultyNumber = facNum;
+		birthYear = bYear;
+		group = gr;
+	}
 	virtual bool departmentAccess() { return true; }
 };
+
+void printMenu() {
+	cout << "1 - Register student" << endl;
+	cout << "2 - Register teacher" << endl;
+	cout << "3 - Register teacher/student" << endl;
+	cout << "4 - Check username" << endl;
+	cout << "5 - Exit" << endl;
+}
+
+int getChoice() {
+	cout << "Enter: ";
+	int choice; cin >> choice;
+	return choice;
+}
+
+Student getStudent() {
+	string newUser;
+	int newFN, newBirthYear, newGroup;
+	cout << "Register username: ";
+	cin >> newUser;
+	cout << "Enter faculty number: ";
+	cin >> newFN;
+	cout << "Enter birth year: ";
+	cin >> newBirthYear;
+	cout << "Enter group: ";
+	cin >> newGroup;
+	return Student(newUser, newFN, newBirthYear, newGroup);
+}
+
+Teacher getTeacher() {
+	string newUser;
+	cout << "Enter username: ";
+	cin >> newUser;
+	return Teacher(newUser);
+}
+
+TeacherStudent getTeacherStudent() {
+	string newUser;
+	int newFN, newBirthYear, newGroup;
+	cout << "Register username: ";
+	cin >> newUser;
+	cout << "Enter faculty number: ";
+	cin >> newFN;
+	cout << "Enter birth year: ";
+	cin >> newBirthYear;
+	cout << "Enter group: ";
+	cin >> newGroup;
+	return TeacherStudent(newUser, newFN, newBirthYear, newGroup);
+}
 
 int main()
 {
-	Accounts acc;
+	allUsers users;
 	for (;;)
 	{
-		cout << "1 - Register student" << endl;
-		cout << "2 - Register teacher" << endl;
-		cout << "3 - Register teacher/student" << endl;
-		cout << "4 - Check username" << endl;
-		cout << "5 - Exit" << endl;
-		cout << "Enter: ";
-		int choice; cin >> choice;
+		printMenu();
+		int choice = getChoice();
 		if (choice < 1 || choice > 5) {
 			cout << "Invalid input";
 			cout << "\n\n";
@@ -100,72 +126,39 @@ int main()
 		}
 		if (choice == 1)
 		{
-			string newUser;
-			int newFN, newBirthYear, newGroup;
-			cout << "Register username: ";
-			cin >> newUser;
-			if (acc.userExists(newUser)) {
+			Student s = getStudent();
+			if (users.userExists(s))
+			{
 				cout << "Username taken!" << endl;
 				cout << "\n\n";
 				continue;
 			}
-			cout << "Enter faculty number: ";
-			cin >> newFN;
-			if (acc.FNexists(newFN)) {
-				cout << "This faculty number has a registered account!" << endl;
-				cout << "\n\n";
-				continue;
-			}
-			cout << "Enter birth year: ";
-			cin >> newBirthYear;
-			cout << "Enter group: ";
-			cin >> newGroup;
-			Student s(newUser, newFN, newBirthYear, newGroup);
-			acc.addUser(s.getUsername());
-			acc.addFN(s.getNumF());
+			users.addUser(s);
 			cout << "\n\n";
 		}
 		else if (choice == 2)
 		{
-			string newUser;
-			cout << "Enter username: ";
-			cin >> newUser;
-			Teacher s(newUser);
-			acc.addUser(s.getUsername());
+			Teacher t = getTeacher();
+			users.addUser(t);
 			cout << "\n\n";
 		}
 		else if (choice == 3)
 		{
-			string newUser;
-			int newFN, newBirthYear, newGroup;
-			cout << "Register username: ";
-			cin >> newUser;
-			if (acc.userExists(newUser)) {
+			TeacherStudent ts = getTeacherStudent();
+			if (users.userExists(ts)) {
 				cout << "Username taken!" << endl;
 				cout << "\n\n";
 				continue;
 			}
-			cout << "Enter faculty number: ";
-			cin >> newFN;
-			if (acc.FNexists(newFN)) {
-				cout << "This faculty number has a registered account!" << endl;
-				cout << "\n\n";
-				continue;
-			}
-			cout << "Enter birth year: ";
-			cin >> newBirthYear;
-			cout << "Enter group: ";
-			cin >> newGroup;
-			TeacherStudent s(newUser, newFN, newBirthYear, newGroup);
-			acc.addUser(s.getUsername());
-			acc.addFN(s.getNumF());
+			users.addUser(ts);
 			cout << "\n\n";
 		}
 		else if (choice == 4)
 		{
-			string enterUsername;
-			cin >> enterUsername;
-			if (acc.userExists(enterUsername)) {
+			string usernameCheck;
+			cin >> usernameCheck;
+			User u(usernameCheck);
+			if (users.userExists(u)) {
 				cout << "The user has access to the portal." << endl;
 				cout << "\n\n";
 			}
