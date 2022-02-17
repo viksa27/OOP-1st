@@ -7,34 +7,40 @@ public:
 	User(const string uname) :
 		username(uname)
 	{};
+	User() {
+		username = "";
+	}
 	string getUsername() const { return username; }
-	virtual bool department() { return false; }
-
 protected:
 	string username;
-	int facultyNumber = 0, birthYear = 0, group = 0;
 };
 
-class allUsers {
+class UserStorage {
 public:
-	bool userExists(const User& u);
-	void addUser(const User& u);
+	bool isUsernameTaken(const User& userToCheck);
+	void addUser(const User& newUser);
 private:
-	set<string> registeredUsers;
+	int userCount = 0;
+	User registeredUsers[1000];
 };
 
-void allUsers::addUser(const User& u) {
-	registeredUsers.insert(u.getUsername());
+void UserStorage::addUser(const User& newUser) {
+	registeredUsers[userCount] = newUser;
+	userCount++;
 }
 
-bool allUsers::userExists(const User& u) {
-	auto it = registeredUsers.find(u.getUsername());
-	if (it == registeredUsers.end()) return false;
+bool UserStorage::isUsernameTaken(const User& userToCheck) {
 
-	return true;
+	for (int i = 0; i < userCount; i++)
+	{
+		if (registeredUsers[i].getUsername() == userToCheck.getUsername())
+			return true;
+	}
+
+	return false;
 }
 
-class Student : public User {
+class Student : virtual public User {
 public:
 	int getGroup() { return group; };
 	Student(string uname, int facNum, int bYear, int gr) :
@@ -43,24 +49,24 @@ public:
 		birthYear = bYear;
 		group = gr;
 	}
+protected:
+	int facultyNumber = 0, birthYear = 0, group = 0;
 };
 
-class Teacher : public User {
+class Teacher : virtual public User {
 public:
-	Teacher(string uname) :
-		User(uname) { }
-	virtual bool departmentAccess() { return true; }
-};
-
-class TeacherStudent : public User {
-public:
-	TeacherStudent(string uname, int facNum, int bYear, int gr) :
+	Teacher(string uname, string dment) :
 		User(uname) {
-		facultyNumber = facNum;
-		birthYear = bYear;
-		group = gr;
+		department = dment;
 	}
-	virtual bool departmentAccess() { return true; }
+protected:
+	string department;
+};
+
+class TeacherStudent : public Student, public Teacher {
+public:
+	TeacherStudent(string uname, int facNum, int bYear, int gr, string dment) :
+		User(uname), Student(uname, facNum, bYear, gr), Teacher(uname, dment) { }
 };
 
 void printMenu() {
@@ -92,14 +98,16 @@ Student getStudent() {
 }
 
 Teacher getTeacher() {
-	string newUser;
+	string newUser, department;
 	cout << "Enter username: ";
 	cin >> newUser;
-	return Teacher(newUser);
+	cout << "Enter department: ";
+	cin >> department;
+	return Teacher(newUser, department);
 }
 
 TeacherStudent getTeacherStudent() {
-	string newUser;
+	string newUser, department;
 	int newFN, newBirthYear, newGroup;
 	cout << "Register username: ";
 	cin >> newUser;
@@ -109,12 +117,14 @@ TeacherStudent getTeacherStudent() {
 	cin >> newBirthYear;
 	cout << "Enter group: ";
 	cin >> newGroup;
-	return TeacherStudent(newUser, newFN, newBirthYear, newGroup);
+	cout << "Enter department: ";
+	cin >> department;
+	return TeacherStudent(newUser, newFN, newBirthYear, newGroup, department);
 }
 
 int main()
 {
-	allUsers users;
+	UserStorage registeredUsers;
 	for (;;)
 	{
 		printMenu();
@@ -127,30 +137,30 @@ int main()
 		if (choice == 1)
 		{
 			Student s = getStudent();
-			if (users.userExists(s))
+			if (registeredUsers.isUsernameTaken(s))
 			{
 				cout << "Username taken!" << endl;
 				cout << "\n\n";
 				continue;
 			}
-			users.addUser(s);
+			registeredUsers.addUser(s);
 			cout << "\n\n";
 		}
 		else if (choice == 2)
 		{
 			Teacher t = getTeacher();
-			users.addUser(t);
+			registeredUsers.addUser(t);
 			cout << "\n\n";
 		}
 		else if (choice == 3)
 		{
 			TeacherStudent ts = getTeacherStudent();
-			if (users.userExists(ts)) {
+			if (registeredUsers.isUsernameTaken(ts)) {
 				cout << "Username taken!" << endl;
 				cout << "\n\n";
 				continue;
 			}
-			users.addUser(ts);
+			registeredUsers.addUser(ts);
 			cout << "\n\n";
 		}
 		else if (choice == 4)
@@ -158,7 +168,7 @@ int main()
 			string usernameCheck;
 			cin >> usernameCheck;
 			User u(usernameCheck);
-			if (users.userExists(u)) {
+			if (registeredUsers.isUsernameTaken(u)) {
 				cout << "The user has access to the portal." << endl;
 				cout << "\n\n";
 			}
